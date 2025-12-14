@@ -25,8 +25,8 @@ export function calculateMatchup(
   const defenderIsWeak = defenderStrategy.weakAgainst.includes(attackerId);
   
   // Calculate modifiers
-  let attackerModifier = STRATEGY_BALANCE.NEUTRAL_MATCHUP;
-  let defenderModifier = STRATEGY_BALANCE.NEUTRAL_MATCHUP;
+  let attackerModifier: number = STRATEGY_BALANCE.NEUTRAL_MATCHUP;
+  let defenderModifier: number = STRATEGY_BALANCE.NEUTRAL_MATCHUP;
   let narrativeHint = 'The strategies are evenly matched.';
   
   if (attackerIsStrong || defenderIsWeak) {
