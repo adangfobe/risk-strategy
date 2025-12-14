@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   // Mobile-first optimizations
   experimental: {
-    optimizePackageImports: ['@anthropic-ai/sdk'],
+    optimizePackageImports: ['openai'],
   },
   // Performance optimizations for mobile
   images: {

@@ -11,7 +11,7 @@ export const GAME_CONFIG = {
   },
   
   // AI settings
-  AI_MODEL: 'claude-sonnet-4-20250514',
+  AI_MODEL: 'gpt-4o-mini',
   AI_TEMPERATURE: 0.7,              // Some variance in narratives
   AI_MAX_TOKENS: 1024,
   

@@ -8,7 +8,7 @@ A mobile-first web application that replaces traditional dice-rolling in Risk bo
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand
-- **AI Engine**: Claude API (Anthropic)
+- **AI Engine**: OpenAI API (GPT-4o-mini)
 - **Package Manager**: pnpm
 - **Deployment**: Vercel
 
@@ -31,7 +31,7 @@ A mobile-first web application that replaces traditional dice-rolling in Risk bo
    ```bash
    cp .env.local.example .env.local
    ```
-   Then add your Anthropic API key to `.env.local`
+   Then add your OpenAI API key to `.env.local`
 
 4. Run the development server:
    ```bash

@@ -39,9 +39,9 @@ export async function POST(request: Request) {
     
     // Handle specific error types
     if (error instanceof Error) {
-      if (error.message.includes('ANTHROPIC_API_KEY')) {
+      if (error.message.includes('OPENAI_API_KEY')) {
         return NextResponse.json(
-          { error: 'AI service not configured. Please set ANTHROPIC_API_KEY.' },
+          { error: 'AI service not configured. Please set OPENAI_API_KEY.' },
           { status: 500 }
         );
       }

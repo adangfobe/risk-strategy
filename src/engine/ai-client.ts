@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import type { BattleSetup, BattleResult, BattlePhase } from '@/types';
 import { GAME_CONFIG } from '@/lib/config/gameParams';
 import { calculateMatchup, getMatchupAdvantage, getMatchupAdvantageStrength } from './matchups';
@@ -68,16 +68,16 @@ TERRITORIES:
 Generate a realistic battle simulation considering these factors.`;
 }
 
-function parseSimulationResponse(response: Anthropic.Messages.Message): BattleResult | null {
+function parseSimulationResponse(response: OpenAI.Chat.Completions.ChatCompletion): BattleResult | null {
   try {
     // Extract text content from the response
-    const content = response.content[0];
-    if (content.type !== 'text') {
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
       throw new Error('Unexpected response format');
     }
 
     // Try to extract JSON from the response
-    const text = content.text;
+    const text = content;
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No JSON found in response');
@@ -122,12 +122,12 @@ function parseSimulationResponse(response: Anthropic.Messages.Message): BattleRe
 }
 
 export async function simulateBattle(battleSetup: BattleSetup): Promise<BattleResult | null> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY is not set');
+    throw new Error('OPENAI_API_KEY is not set');
   }
 
-  const client = new Anthropic({ apiKey });
+  const client = new OpenAI({ apiKey });
   
   const matchup = calculateMatchup(battleSetup.attackerStrategy, battleSetup.defenderStrategy);
   const matchupAdvantage = getMatchupAdvantage(battleSetup.attackerStrategy, battleSetup.defenderStrategy);
@@ -136,15 +136,20 @@ export async function simulateBattle(battleSetup: BattleSetup): Promise<BattleRe
   const prompt = buildSimulationPrompt(battleSetup, matchupAdvantage, advantageStrength);
 
   try {
-    const response = await client.messages.create({
+    const response = await client.chat.completions.create({
       model: GAME_CONFIG.AI_MODEL,
       max_tokens: GAME_CONFIG.AI_MAX_TOKENS,
       temperature: GAME_CONFIG.AI_TEMPERATURE,
-      system: SIMULATION_SYSTEM_PROMPT,
-      messages: [{
-        role: 'user',
-        content: prompt,
-      }],
+      messages: [
+        {
+          role: 'system',
+          content: SIMULATION_SYSTEM_PROMPT,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
     });
 
     const result = parseSimulationResponse(response);
@@ -170,7 +175,7 @@ export async function simulateBattle(battleSetup: BattleSetup): Promise<BattleRe
 
     return result;
   } catch (error) {
-    console.error('Error calling Anthropic API:', error);
+    console.error('Error calling OpenAI API:', error);
     throw error;
   }
 }
