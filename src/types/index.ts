@@ -3,6 +3,22 @@ import type { MapTerritory } from '@/lib/map/territories';
 export type PlayerColor = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange';
 export type TerrainType = 'plains' | 'mountain' | 'forest' | 'desert' | 'coast' | 'urban';
 
+/** Hex values used to render player/team colors on the map and battle visualizer. */
+export const PLAYER_COLOR_HEX: Record<PlayerColor, string> = {
+  red: '#ef4444',
+  blue: '#3b82f6',
+  green: '#22c55e',
+  yellow: '#eab308',
+  purple: '#a855f7',
+  orange: '#f97316',
+};
+
+export interface Player {
+  id: string;
+  name: string;
+  color: PlayerColor;
+}
+
 export interface Territory {
   id: string;
   name: string;
@@ -27,6 +43,8 @@ export interface BattleSetup {
   defenderStrategyText: string;
   attackerColor: PlayerColor;
   defenderColor: PlayerColor;
+  attackerName?: string;
+  defenderName?: string;
 }
 
 export interface BattleResult {
@@ -44,6 +62,15 @@ export interface BattleResult {
   defenderStrategyAssessment: string;
 
   simulationSeed: string;
+}
+
+export interface SavedBattle {
+  id: string;
+  timestamp: number;
+  setup: BattleSetup;
+  result: BattleResult;
+  attackerPlayerId: string | null;
+  defenderPlayerId: string | null;
 }
 
 export function mapTerritoryToTerritory(t: MapTerritory): Territory {

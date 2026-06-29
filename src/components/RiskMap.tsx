@@ -5,14 +5,25 @@ import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import boardData from '@/lib/map/board.json';
 import { getTerritory, getAdjacent, areAdjacent } from '@/lib/map/territories';
 
-type SelectionMode = 'from' | 'to';
+import type { TerrainType } from '@/types';
 
 interface RiskMapProps {
   fromTerritoryId: string | null;
   toTerritoryId: string | null;
+  fromColor?: string;
+  toColor?: string;
   onSelectFrom: (id: string) => void;
   onSelectTo: (id: string) => void;
 }
+
+const TERRAIN_GLYPH: Record<TerrainType, string> = {
+  plains: '🌾',
+  mountain: '⛰️',
+  forest: '🌲',
+  desert: '🏜️',
+  coast: '🌊',
+  urban: '🏙️',
+};
 
 const continentStyles = Object.fromEntries(
   boardData.continents.map((c) => [c.id, { fill: c.fill, stroke: c.stroke }])
@@ -45,6 +56,8 @@ function getTerritoryStyle(
 export default function RiskMap({
   fromTerritoryId,
   toTerritoryId,
+  fromColor,
+  toColor,
   onSelectFrom,
   onSelectTo,
 }: RiskMapProps) {
@@ -156,6 +169,55 @@ export default function RiskMap({
                   >
                     <title>{territory?.name ?? t.id}</title>
                   </path>
+                );
+              })}
+
+              {/* Always-on labels: name, terrain glyph, and combatant dot */}
+              {boardData.territories.map((t) => {
+                const territory = getTerritory(t.id);
+                const center = t.center;
+                if (!center) return null;
+                const isFrom = t.id === fromTerritoryId;
+                const isTo = t.id === toTerritoryId;
+                const dotColor = isFrom ? fromColor : isTo ? toColor : null;
+                const glyph = territory?.terrain ? TERRAIN_GLYPH[territory.terrain] : null;
+
+                return (
+                  <g key={`label-${t.id}`} className="pointer-events-none">
+                    {dotColor && (
+                      <circle
+                        cx={center.x}
+                        cy={center.y - 24}
+                        r={7}
+                        fill={dotColor}
+                        stroke="#ffffff"
+                        strokeWidth={2}
+                      />
+                    )}
+                    {glyph && (
+                      <text
+                        x={center.x}
+                        y={center.y - 8}
+                        textAnchor="middle"
+                        fontSize={13}
+                      >
+                        {glyph}
+                      </text>
+                    )}
+                    <text
+                      x={center.x}
+                      y={center.y + 6}
+                      textAnchor="middle"
+                      fontSize={9}
+                      fontWeight={600}
+                      fill="#1f2937"
+                      stroke="#ffffff"
+                      strokeWidth={2.5}
+                      style={{ paintOrder: 'stroke' }}
+                    >
+                      {territory?.name ?? t.id}
+                    </text>
+                  </g>
                 );
               })}
             </svg>

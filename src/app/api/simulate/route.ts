@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { BattleSetup, BattleResult } from '@/types';
 import { runSimulation } from '@/engine/simulation';
+import { hashBattleSetup } from '@/engine/battleResolver';
 import { areAdjacent, getTerritory } from '@/lib/map/territories';
 
 function validateBattleSetup(setup: BattleSetup): string | null {
@@ -49,7 +50,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
+    const setupKey = hashBattleSetup(battleSetup as BattleSetup);
+    const startedAt = Date.now();
+    console.info(`[simulate] start key=${setupKey}`);
+
     const result: BattleResult = await runSimulation(battleSetup as BattleSetup);
+
+    console.info(
+      `[simulate] done key=${setupKey} winner=${result.winner} ` +
+        `attacker=${result.attackerRemainingTroops}/${result.attackerStartingTroops} ` +
+        `defender=${result.defenderRemainingTroops}/${result.defenderStartingTroops} ` +
+        `ms=${Date.now() - startedAt}`
+    );
+
     return NextResponse.json({ result });
   } catch (error) {
     console.error('Simulation error:', error);

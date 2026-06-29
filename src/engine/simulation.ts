@@ -21,12 +21,9 @@ export async function runSimulation(battleSetup: BattleSetup): Promise<BattleRes
     throw new Error('Invalid battle result: negative remaining troops');
   }
 
-  if (result.winner === 'attacker' && result.defenderRemainingTroops > 0) {
+  // Risk: conquering a territory eliminates the defender's remaining garrison.
+  if (result.winner === 'attacker' && result.territoryConquered) {
     result.defenderRemainingTroops = 0;
-  }
-
-  if (result.winner === 'defender' && result.attackerRemainingTroops > 0) {
-    result.attackerRemainingTroops = 0;
   }
 
   return result;
