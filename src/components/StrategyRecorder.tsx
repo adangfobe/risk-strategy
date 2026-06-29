@@ -132,7 +132,7 @@ export default function StrategyRecorder({
         onChange={(e) => onChange(e.target.value)}
         placeholder={`Describe your ${side} strategy…`}
         rows={4}
-        className="w-full rounded-lg border border-gray-300 p-3 text-base leading-relaxed focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded-lg border border-gray-300 p-3 text-base leading-relaxed text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
       />
     </div>
   );
