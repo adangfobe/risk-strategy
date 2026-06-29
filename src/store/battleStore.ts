@@ -1,27 +1,17 @@
 import { create } from 'zustand';
-import type { BattleSetup, BattleResult, Strategy, PlayerColor } from '@/types';
+import type { BattleSetup, BattleResult } from '@/types';
 
 interface BattleState {
-  // Current battle setup
   battleSetup: BattleSetup | null;
-  
-  // Battle result
   battleResult: BattleResult | null;
-  
-  // Loading states
   isSimulating: boolean;
   simulationError: string | null;
-  
-  // Actions
+
   setBattleSetup: (setup: BattleSetup) => void;
   setBattleResult: (result: BattleResult) => void;
   setSimulating: (isSimulating: boolean) => void;
   setSimulationError: (error: string | null) => void;
   resetBattle: () => void;
-  
-  // Helper getters
-  getAttackerStrategy: () => Strategy | null;
-  getDefenderStrategy: () => Strategy | null;
 }
 
 const initialState = {
@@ -31,49 +21,34 @@ const initialState = {
   simulationError: null,
 };
 
-export const useBattleStore = create<BattleState>((set, get) => ({
+export const useBattleStore = create<BattleState>((set) => ({
   ...initialState,
-  
-  setBattleSetup: (setup: BattleSetup) => {
-    set({ 
+
+  setBattleSetup: (setup) => {
+    set({
       battleSetup: setup,
       battleResult: null,
       simulationError: null,
     });
   },
-  
-  setBattleResult: (result: BattleResult) => {
-    set({ 
+
+  setBattleResult: (result) => {
+    set({
       battleResult: result,
       isSimulating: false,
       simulationError: null,
     });
   },
-  
-  setSimulating: (isSimulating: boolean) => {
-    set({ 
-      isSimulating,
-      simulationError: null,
-    });
+
+  setSimulating: (isSimulating) => {
+    set({ isSimulating, simulationError: null });
   },
-  
-  setSimulationError: (error: string | null) => {
-    set({ 
-      simulationError: error,
-      isSimulating: false,
-    });
+
+  setSimulationError: (error) => {
+    set({ simulationError: error, isSimulating: false });
   },
-  
+
   resetBattle: () => {
     set(initialState);
   },
-  
-  getAttackerStrategy: () => {
-    return get().battleSetup?.attackerStrategy || null;
-  },
-  
-  getDefenderStrategy: () => {
-    return get().battleSetup?.defenderStrategy || null;
-  },
 }));
-

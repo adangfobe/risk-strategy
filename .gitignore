@@ -33,6 +33,12 @@ pnpm-debug.log*
 # vercel
 .vercel
 
+# PWA service worker (generated at build time)
+public/sw.js
+public/workbox-*.js
+public/sw.js.map
+public/workbox-*.js.map
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

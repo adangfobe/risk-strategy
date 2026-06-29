@@ -1,4 +1,4 @@
-import type { Strategy, StrategyMatchup } from './strategies';
+import type { MapTerritory } from '@/lib/map/territories';
 
 export type PlayerColor = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange';
 export type TerrainType = 'plains' | 'mountain' | 'forest' | 'desert' | 'coast' | 'urban';
@@ -7,7 +7,7 @@ export interface Territory {
   id: string;
   name: string;
   continent: string;
-  terrain?: TerrainType;          // Future: affects strategy effectiveness
+  terrain?: TerrainType;
 }
 
 export interface BattlePhase {
@@ -23,8 +23,8 @@ export interface BattleSetup {
   defendingTerritory: Territory;
   attackingTroops: number;
   defendingTroops: number;
-  attackerStrategy: Strategy;
-  defenderStrategy: Strategy;
+  attackerStrategyText: string;
+  defenderStrategyText: string;
   attackerColor: PlayerColor;
   defenderColor: PlayerColor;
 }
@@ -36,38 +36,23 @@ export interface BattleResult {
   attackerRemainingTroops: number;
   defenderRemainingTroops: number;
   territoryConquered: boolean;
-  
-  // AI-generated content
+
   battleNarrative: string;
   phases: BattlePhase[];
-  keyMoment: string;              // Highlight for results screen
-  
-  // Metadata
-  strategyMatchup: StrategyMatchup;
-  simulationSeed: string;         // For replay/debugging
+  keyMoment: string;
+  attackerStrategyAssessment: string;
+  defenderStrategyAssessment: string;
+
+  simulationSeed: string;
 }
 
-export interface SimulationPrompt {
-  context: {
-    attackingTroops: number;
-    defendingTroops: number;
-    attackerStrategy: Strategy;
-    defenderStrategy: Strategy;
-    matchupAdvantage: 'attacker' | 'defender' | 'neutral';
-    advantageStrength: number;
-  };
-  
-  instructions: string;  // How to evaluate and respond
-  
-  responseFormat: {
-    winner: 'attacker' | 'defender';
-    attackerCasualties: number;
-    defenderCasualties: number;
-    battlePhases: BattlePhase[];
-    narrativeSummary: string;
+export function mapTerritoryToTerritory(t: MapTerritory): Territory {
+  return {
+    id: t.id,
+    name: t.name,
+    continent: t.continent,
+    terrain: t.terrain,
   };
 }
 
-// Re-export strategy types for convenience
-export type { Strategy, StrategyMatchup } from './strategies';
-
+export type { Strategy, StrategyKnowledgeEntry } from './strategies';

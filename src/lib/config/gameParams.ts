@@ -1,29 +1,19 @@
 export const GAME_CONFIG = {
-  // Battle limits
-  MIN_TROOPS_TO_ATTACK: 2,          // Must leave 1 behind
-  MAX_TROOPS_IN_BATTLE: 50,         // Performance/balance cap
-  
-  // Simulation settings
+  MIN_TROOPS_TO_ATTACK: 2,
+  MAX_TROOPS_IN_BATTLE: 50,
+
   SIMULATION_SPEED: {
-    FAST: 3000,       // ms total battle time
+    FAST: 3000,
     NORMAL: 8000,
     CINEMATIC: 15000,
   },
-  
-  // AI settings
-  AI_MODEL: 'gpt-4o-mini',
-  AI_TEMPERATURE: 0.7,              // Some variance in narratives
-  AI_MAX_TOKENS: 1024,
-  
-  // Display settings
+
+  AI_MODEL: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+  AI_TEMPERATURE: 0.7,
+  AI_MAX_TOKENS: 4096,
+
   MAX_VISIBLE_UNITS: 50,
   CANVAS_TARGET_FPS: 60,
-  
-  // Balance tuning
-  TROOP_RATIO_WEIGHT: 0.6,          // How much raw numbers matter
-  STRATEGY_MATCHUP_WEIGHT: 0.4,     // How much tactics matter
-  
-  // Territory count (standard Risk)
+
   TOTAL_TERRITORIES: 42,
 } as const;
-

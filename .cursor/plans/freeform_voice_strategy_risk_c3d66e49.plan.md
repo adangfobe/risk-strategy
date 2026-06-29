@@ -4,34 +4,34 @@ overview: Replace fixed strategy selection with an interactive Risk map plus fre
 todos:
   - id: deps-config
     content: Add @google/genai, @deepgram/sdk, next-pwa, react-zoom-pan-pinch deps; update gameParams.ts to env-configurable Gemini model (default gemini-3-flash-preview); fix .env.local.example to add GEMINI_API_KEY, GEMINI_MODEL, DEEPGRAM_API_KEY and remove ANTHROPIC key.
-    status: pending
+    status: completed
   - id: map-data
     content: Create src/lib/map/territories.ts with all 42 territories, continents, canonical adjacency, optional terrain, and adjacency helpers.
-    status: pending
+    status: completed
   - id: types
     content: Update BattleSetup/BattleResult types for freeform strategy text + per-side assessments; repurpose strategy archetypes as an internal AI knowledge base (remove user selection/numeric matchups).
-    status: pending
+    status: completed
   - id: svg-map
     content: Vendor an open-source Risk SVG, normalize element ids to territory ids, build src/components/RiskMap.tsx with tap-to-select from/target, adjacency highlighting, selection states, plus mobile pinch-zoom/pan and tapped-territory name confirmation.
-    status: pending
+    status: completed
   - id: voice
     content: Build src/components/StrategyRecorder.tsx (MediaRecorder + editable transcript) and src/app/api/transcribe/route.ts calling Deepgram pre-recorded Nova-3 server-side.
-    status: pending
+    status: completed
   - id: ai-engine
     content: Rewrite src/engine/ai-client.ts to use Gemini with the expert-military-strategist prompt and JSON responseSchema; trim matchups.ts; fix zero-casualty validation bug.
-    status: pending
+    status: completed
   - id: setup-ui
     content: Build the mobile-first single-column setup screen in src/app/page.tsx (map + troops + dual recorders + simulate) and update src/app/battle/page.tsx to show per-side strategy assessment and stack grid-cols-2 to single column on phones.
-    status: pending
+    status: completed
   - id: pwa
     content: Add PWA support - public/manifest.json + 192/512 icons + apple-touch-icon, wire manifest/iOS meta in layout.tsx, configure next-pwa service worker (production only), handle safe-area insets and 100dvh.
-    status: pending
+    status: completed
   - id: wire-validate
     content: Update /api/simulate validation and battleStore types for the new freeform setup; test end-to-end including on a mobile viewport.
-    status: pending
+    status: completed
   - id: cleanup
     content: Remove openai dependency/usages, update README to reflect Gemini + Deepgram + freeform map + mobile PWA flow, gitignore .DS_Store files.
-    status: pending
+    status: completed
 isProject: false
 ---
 
