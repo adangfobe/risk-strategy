@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import { getPresetsForSide } from '@/lib/strategyPresets';
 
 interface StrategyRecorderProps {
   label: string;
@@ -104,9 +105,35 @@ export default function StrategyRecorder({
       ? 'bg-green-600 hover:bg-green-700 active:bg-green-800'
       : 'bg-red-600 hover:bg-red-700 active:bg-red-800';
 
+  const presets = getPresetsForSide(side);
+  const selectedPresetId = presets.find((p) => p.text === value)?.id ?? null;
+
   return (
     <div className={`rounded-lg border-2 p-4 ${accentClass}`}>
       <h3 className="mb-3 text-lg font-semibold">{label}</h3>
+
+      <p className="mb-2 text-sm text-gray-600">Quick picks</p>
+      <div className="mb-3 flex flex-wrap gap-2">
+        {presets.map((preset) => {
+          const selected = selectedPresetId === preset.id;
+          return (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => onChange(preset.text)}
+              className={`min-h-[44px] rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+                selected
+                  ? side === 'attacker'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-red-600 text-white'
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300'
+              }`}
+            >
+              {preset.label}
+            </button>
+          );
+        })}
+      </div>
 
       <button
         type="button"
@@ -130,7 +157,7 @@ export default function StrategyRecorder({
         id={`strategy-${side}`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={`Describe your ${side} strategy…`}
+        placeholder={`Tap a quick pick, record, or type your ${side} strategy…`}
         rows={4}
         className="w-full rounded-lg border border-gray-300 p-3 text-base leading-relaxed text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
       />
