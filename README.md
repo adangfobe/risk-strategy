@@ -36,6 +36,15 @@ A mobile-first PWA that replaces traditional dice-rolling in Risk board games wi
    - `GEMINI_API_KEY` — [Google AI Studio](https://aistudio.google.com/apikey)
    - `DEEPGRAM_API_KEY` — [Deepgram Console](https://console.deepgram.com/)
    - `GEMINI_MODEL` — optional, defaults to `gemini-2.5-flash`
+   - `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon/public key
+
+### Supabase setup
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. In **Authentication → Providers**, enable **Email** (disable “Confirm email” for faster local dev if you prefer)
+3. In **SQL Editor**, run the migration file: `supabase/migrations/001_initial_schema.sql`
+4. Copy **Project URL** and **anon public** key from **Settings → API** into `.env.local`
 
 4. Run the development server:
    ```bash

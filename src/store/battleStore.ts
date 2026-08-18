@@ -4,18 +4,26 @@ import { hashBattleSetup } from '@/engine/battleResolver';
 import type { BattleSetup, BattleResult, Player, SavedBattle } from '@/types';
 
 interface BattleState {
+  activeGameId: string | null;
   players: Player[];
   battleHistory: SavedBattle[];
 
   battleSetup: BattleSetup | null;
   battleResult: BattleResult | null;
+  battleAttackerPlayerId: string | null;
+  battleDefenderPlayerId: string | null;
   isSimulating: boolean;
   simulationError: string | null;
   /** Setup hash for an in-flight simulation — prevents duplicate API calls across remounts. */
   simulationKeyInFlight: string | null;
 
+  setActiveGame: (gameId: string, players: Player[], battles: SavedBattle[]) => void;
   setPlayers: (players: Player[]) => void;
-  setBattleSetup: (setup: BattleSetup) => void;
+  setBattleSetup: (
+    setup: BattleSetup,
+    attackerPlayerId?: string | null,
+    defenderPlayerId?: string | null
+  ) => void;
   setBattleResult: (result: BattleResult) => void;
   setSimulating: (isSimulating: boolean) => void;
   setSimulationError: (error: string | null) => void;
@@ -23,12 +31,14 @@ interface BattleState {
   addBattleToHistory: (battle: SavedBattle) => void;
   loadSavedBattle: (battle: SavedBattle) => void;
   resetBattle: () => void;
-  newGame: () => void;
+  leaveGame: () => void;
 }
 
 const initialBattle = {
   battleSetup: null,
   battleResult: null,
+  battleAttackerPlayerId: null,
+  battleDefenderPlayerId: null,
   isSimulating: false,
   simulationError: null,
   simulationKeyInFlight: null,
@@ -37,19 +47,31 @@ const initialBattle = {
 export const useBattleStore = create<BattleState>()(
   persist(
     (set) => ({
+      activeGameId: null,
       players: [],
       battleHistory: [],
       ...initialBattle,
+
+      setActiveGame: (gameId, players, battles) => {
+        set({
+          activeGameId: gameId,
+          players,
+          battleHistory: battles,
+          ...initialBattle,
+        });
+      },
 
       setPlayers: (players) => {
         set({ players });
       },
 
-      setBattleSetup: (setup) => {
+      setBattleSetup: (setup, attackerPlayerId = null, defenderPlayerId = null) => {
         const key = hashBattleSetup(setup);
         set({
           battleSetup: setup,
           battleResult: null,
+          battleAttackerPlayerId: attackerPlayerId,
+          battleDefenderPlayerId: defenderPlayerId,
           simulationError: null,
           isSimulating: true,
           simulationKeyInFlight: key,
@@ -97,27 +119,19 @@ export const useBattleStore = create<BattleState>()(
         set({ ...initialBattle });
       },
 
-      newGame: () => {
-        set({ players: [], battleHistory: [], ...initialBattle });
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(
-            'risk-session',
-            JSON.stringify({
-              state: {
-                players: [],
-                battleHistory: [],
-                battleSetup: null,
-                battleResult: null,
-              },
-              version: 0,
-            })
-          );
-        }
+      leaveGame: () => {
+        set({
+          activeGameId: null,
+          players: [],
+          battleHistory: [],
+          ...initialBattle,
+        });
       },
     }),
     {
       name: 'risk-session',
       partialize: (state) => ({
+        activeGameId: state.activeGameId,
         players: state.players,
         battleHistory: state.battleHistory,
         battleSetup: state.battleSetup,

@@ -1,11 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useBattleStore } from '@/store/battleStore';
 import BattleVisualizer from '@/components/BattleVisualizer';
 import SimulationLoader from '@/components/SimulationLoader';
 import { hashBattleSetup } from '@/engine/battleResolver';
+import { createClient } from '@/lib/supabase/client';
+import { saveBattle } from '@/lib/games/api';
 import { clearSimulation, registerSimulation } from '@/lib/simulationLock';
 import { PLAYER_COLOR_HEX, type BattleResult, type SavedBattle } from '@/types';
 
@@ -37,9 +39,14 @@ async function fetchSimulation(battleSetup: NonNullable<ReturnType<typeof useBat
 
 export default function BattlePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isReplay = searchParams.get('replay') === '1';
   const {
+    activeGameId,
     battleSetup,
     battleResult,
+    battleAttackerPlayerId,
+    battleDefenderPlayerId,
     isSimulating,
     simulationError,
     setBattleResult,
@@ -50,6 +57,7 @@ export default function BattlePage() {
   } = useBattleStore();
 
   const [hydrated, setHydrated] = useState(false);
+  const [replaySaved, setReplaySaved] = useState(false);
 
   const setupKey = useMemo(
     () => (battleSetup ? hashBattleSetup(battleSetup) : null),
@@ -72,21 +80,47 @@ export default function BattlePage() {
   }, []);
 
   const saveToHistory = useCallback(
-    (result: BattleResult) => {
+    async (result: BattleResult) => {
       if (!battleSetup || !setupKey || historySavedForKeyRef.current === setupKey) return;
 
+      let battleId = `b-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+
+      if (activeGameId) {
+        try {
+          const supabase = createClient();
+          battleId = await saveBattle(
+            supabase,
+            activeGameId,
+            battleSetup,
+            result,
+            battleAttackerPlayerId,
+            battleDefenderPlayerId
+          );
+          setReplaySaved(true);
+        } catch (err) {
+          console.error('Failed to save battle to Supabase:', err);
+        }
+      }
+
       const saved: SavedBattle = {
-        id: `b-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+        id: battleId,
         timestamp: Date.now(),
         setup: battleSetup,
         result,
-        attackerPlayerId: null,
-        defenderPlayerId: null,
+        attackerPlayerId: battleAttackerPlayerId,
+        defenderPlayerId: battleDefenderPlayerId,
       };
       addBattleToHistory(saved);
       historySavedForKeyRef.current = setupKey;
     },
-    [battleSetup, setupKey, addBattleToHistory]
+    [
+      battleSetup,
+      setupKey,
+      activeGameId,
+      battleAttackerPlayerId,
+      battleDefenderPlayerId,
+      addBattleToHistory,
+    ]
   );
 
   useEffect(() => {
@@ -174,8 +208,23 @@ export default function BattlePage() {
         >
           ← Back to Setup
         </button>
-        <h1 className="text-2xl font-bold">Battle Simulation</h1>
+        <h1 className="text-2xl font-bold">
+          {isReplay ? 'Battle Replay' : 'Battle Simulation'}
+        </h1>
       </div>
+
+      {replaySaved && activeGameId && !isReplay && (
+        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4">
+          <p className="text-sm font-medium text-green-800">Replay saved for everyone in this game.</p>
+          <button
+            type="button"
+            onClick={() => router.push(`/games/${activeGameId}/replays`)}
+            className="mt-2 text-sm font-medium text-green-700 underline hover:text-green-900"
+          >
+            View all replays →
+          </button>
+        </div>
+      )}
 
       {showLoader && <SimulationLoader battleSetup={battleSetup} />}
 

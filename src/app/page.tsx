@@ -2,18 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import RiskMap from '@/components/RiskMap';
-import RosterSetup from '@/components/RosterSetup';
-import BattleHistoryList from '@/components/BattleHistoryList';
+import { ReplayListLink } from '@/components/ReplayList';
 import StrategyRecorder from '@/components/StrategyRecorder';
 import { getTerritory } from '@/lib/map/territories';
+import { createClient } from '@/lib/supabase/client';
+import { loadGameMeta } from '@/lib/games/api';
 import { useBattleStore } from '@/store/battleStore';
 import {
   mapTerritoryToTerritory,
   PLAYER_COLOR_HEX,
   type BattleSetup,
   type Player,
-  type SavedBattle,
 } from '@/types';
 import { GAME_CONFIG } from '@/lib/config/gameParams';
 
@@ -21,15 +22,20 @@ type StrategyStep = 'idle' | 'attacker' | 'gate' | 'defender' | 'done';
 
 export default function Home() {
   const router = useRouter();
+  const activeGameId = useBattleStore((s) => s.activeGameId);
   const players = useBattleStore((s) => s.players);
   const battleHistory = useBattleStore((s) => s.battleHistory);
-  const setPlayers = useBattleStore((s) => s.setPlayers);
   const setBattleSetup = useBattleStore((s) => s.setBattleSetup);
-  const loadSavedBattle = useBattleStore((s) => s.loadSavedBattle);
-  const newGame = useBattleStore((s) => s.newGame);
+  const leaveGame = useBattleStore((s) => s.leaveGame);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (mounted && !activeGameId) {
+      router.push('/games');
+    }
+  }, [mounted, activeGameId, router]);
 
   const [fromId, setFromId] = useState<string | null>(null);
   const [toId, setToId] = useState<string | null>(null);
@@ -41,6 +47,31 @@ export default function Home() {
   const [defenderStrategyText, setDefenderStrategyText] = useState('');
   const [strategyStep, setStrategyStep] = useState<StrategyStep>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [gameMeta, setGameMeta] = useState<{
+    name: string | null;
+    shareCode: string;
+    isHost: boolean;
+  } | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  useEffect(() => {
+    if (!activeGameId) return;
+
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      try {
+        const meta = await loadGameMeta(supabase, activeGameId);
+        setGameMeta({
+          name: meta.name,
+          shareCode: meta.share_code,
+          isHost: meta.host_user_id === user.id,
+        });
+      } catch {
+        setGameMeta(null);
+      }
+    });
+  }, [activeGameId]);
 
   useEffect(() => {
     if (players.length === 0) return;
@@ -68,32 +99,20 @@ export default function Home() {
     setError(null);
   }, []);
 
-  const handleReview = useCallback(
-    (battle: SavedBattle) => {
-      loadSavedBattle(battle);
-      router.push('/battle');
-    },
-    [loadSavedBattle, router]
-  );
+  const handleCopyCode = async () => {
+    if (!gameMeta?.shareCode) return;
+    await navigator.clipboard.writeText(gameMeta.shareCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
 
-  const handleNewGame = useCallback(() => {
-    const confirmed = window.confirm(
-      'Start a new game? This clears all players, battle history, and saved session data.'
-    );
+  const handleLeaveGame = useCallback(() => {
+    const confirmed = window.confirm('Leave this game and return to your game list?');
     if (!confirmed) return;
 
-    newGame();
-    setFromId(null);
-    setToId(null);
-    setAttackingTroops(10);
-    setDefendingTroops(8);
-    setAttackerStrategyText('');
-    setDefenderStrategyText('');
-    setStrategyStep('idle');
-    setAttackerPlayerId(null);
-    setDefenderPlayerId(null);
-    setError(null);
-  }, [newGame]);
+    leaveGame();
+    router.push('/games');
+  }, [leaveGame, router]);
 
   const battleReady =
     !!fromId && !!toId && attackingTroops >= 1 && defendingTroops >= 1 && !!attacker && !!defender;
@@ -134,7 +153,7 @@ export default function Home() {
       defenderName: defender.name,
     };
 
-    setBattleSetup(setup);
+    setBattleSetup(setup, attacker.id, defender.id);
     router.push('/battle');
   };
 
@@ -146,8 +165,12 @@ export default function Home() {
     );
   }
 
-  if (players.length === 0) {
-    return <RosterSetup onStart={(p) => setPlayers(p)} />;
+  if (!activeGameId || players.length === 0) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center">
+        <p className="text-gray-500">Loading…</p>
+      </div>
+    );
   }
 
   return (
@@ -162,13 +185,34 @@ export default function Home() {
           </div>
           <button
             type="button"
-            onClick={handleNewGame}
-            className="shrink-0 min-h-[44px] rounded-xl border-2 border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 shadow-sm transition-colors hover:border-red-400 hover:bg-red-100 active:bg-red-200"
+            onClick={handleLeaveGame}
+            className="shrink-0 min-h-[44px] rounded-xl border-2 border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
           >
-            New Game
+            Games
           </button>
         </div>
       </header>
+
+      {gameMeta?.isHost && (
+        <section className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-900">You are the host</p>
+          <p className="mt-1 text-sm text-amber-800">
+            Share this code so others can join and see replays:
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="font-mono text-xl font-bold tracking-widest text-amber-900">
+              {gameMeta.shareCode}
+            </span>
+            <button
+              type="button"
+              onClick={handleCopyCode}
+              className="min-h-[36px] rounded-lg border border-amber-300 bg-white px-3 text-sm font-medium text-amber-900"
+            >
+              {copiedCode ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* Roster bar */}
       <div className="mb-6 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
@@ -190,7 +234,20 @@ export default function Home() {
         ))}
       </div>
 
-      <BattleHistoryList battles={battleHistory} onReview={handleReview} />
+      <section className="mb-6 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">Replays</h2>
+        {activeGameId && (
+          <ReplayListLink gameId={activeGameId} count={battleHistory.length} />
+        )}
+      </section>
+      {battleHistory.length > 0 && (
+        <p className="mb-6 text-sm text-gray-600">
+          Battles are saved automatically.{' '}
+          <Link href={`/games/${activeGameId}/replays`} className="font-medium text-blue-600">
+            Open replay library →
+          </Link>
+        </p>
+      )}
 
       {/* Step 1: Map */}
       <section className="mb-6">
